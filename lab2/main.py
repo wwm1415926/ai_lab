@@ -90,14 +90,14 @@ class Node:
         self.board =np.zeros((BOARD_SIZE, BOARD_SIZE), dtype=int)
 
         if node is not None:
-            if node.is_max==True:
+            if node.is_max:
                 self.is_max=False
                 self.value =-np.inf
             else:
                 self.is_max=True
                 self.value=np.inf
             self.depth =node.depth + 1
-            self.father = node
+            self.father =node
             self.posX = posX
             self.posY = posY
             self.board = node.board.copy()
@@ -106,218 +106,76 @@ class Node:
             else:
                 self.board[self.posX][self.posY] =BLACK
 
+    def evaluate(self,board):
+        def evaluate_black(s):
+            patterns = [
+                "B0000", "0B000", "00B00", "000B0", "0000B",
+                "BB000", "0BB00", "00BB0", "000BB", "B0B00", "0B0B0", "00B0B", "B00B0", "0B00B", "B000B",
+                "BBB00", "0BBB0", "00BBB", "BB0B0", "0BB0B", "B0BB0", "0B0BB", "BB00B", "B00BB", "B0B0B",
+                "BBBB0", "BBB0B", "BB0BB", "B0BBB", "0BBBB", "BBBBB",
+            ]
+            scores = [
+                1, 1, 1, 1, 1,
+                10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+                10000, 10000, 10000, 10000, 10000, 1000000,
+            ]
+            for i in range(31):
+                if s == patterns[i]:
 
-    def evaluate(self):
-        score=0
-        for i in range(3,BOARD_SIZE-3):
-            for j in range(3,BOARD_SIZE-3):
-                if(j<=10):
-                    pattern1 = ''
+                    return scores[i]
+            return 0
+
+        def evaluate_white(s):
+            patterns = [
+                "W0000", "0W000", "00W00", "000W0", "0000W",
+                "WW000", "0WW00", "00WW0", "000WW", "W0W00", "0W0W0", "00W0W", "W00W0", "0W00W", "W000W",
+                "WWW00", "0WWW0", "00WWW", "WW0W0", "0WW0W", "W0WW0", "0W0WW", "WW00W", "W00WW", "W0W0W",
+                "WWWW0", "WWW0W", "WW0WW", "W0WWW", "0WWWW", "WWWW",
+            ]
+            scores = [
+                1, 1, 1, 1, 1,10,
+                10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                1000, 2000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+                100000, 100000, 100000, 100000, 100000, 10000000,
+            ]
+            for i in range(31):
+                if s == patterns[i]:
+                    print(scores[i])
+                    return scores[i]
+            return 0
+
+        def convert(pos):
+            if pos == 0:
+                return "0"
+            elif pos == BLACK:
+                return "B"
+            else:
+                return "W"
+        self.value = 0
+        for i in range(15):
+            for j in range(15):
+                if j + 4 < 15:
+                    s = ''
                     for k in range(5):
-                        if self.board[i, j + k] == 1:
-                            pattern1+="B"
-                        elif self.board[i, j + k]==2:
-                            pattern1+="W"
-                        else:
-                            pattern1+="O"
-                    black_count = pattern1.count('B')
-                    white_count = pattern1.count('W')
-                    empty_count = pattern1.count('O')
-                    print(black_count,white_count,empty_count)
-                    # （1）同时含有黑子和白子，得0分
-                    if black_count > 0 and white_count > 0:
-                        score -= 0
-                    # （2）含有1个黑子和4个空点，得+1分
-                    elif black_count == 1 and empty_count == 4:
-                        score -= 1
-                    # （3）含有2个黑子和3个空点，得+10分
-                    elif black_count == 2 and empty_count == 3:
-                        score -= 10
-                    # （4）含有3个黑子和2个空点，得+100分
-                    elif black_count == 3 and empty_count == 2:
-                        score -= 100
-                    # （5）含有4个黑子和1个空点，得+10000分
-                    elif black_count == 4 and empty_count == 1:
-                        print("got line 141")
-                        score -= 100000
-                    # （6）含有5个黑子，得+1000000分
-                    if black_count==5:
-                        score-=1000000
-                    # （7）含有1个白子和4个空点，得-1分
-                    elif white_count == 1 and empty_count == 4:
-                        score += 1
-                    # （8）含有2个白子和3个空点，得-10分
-                    elif white_count == 2 and empty_count == 3:
-                        score += 10
-                    # （9）形如“0WWW0”，得-2000分
-                    elif white_count == 3 and empty_count == 2 and pattern1[0] == 'O' and pattern1[-1] == 'O':
-                        score +=2000
-                    # （10）含有3个白子和2个空点，得-1000分
-                    elif white_count == 3 and empty_count == 2:
-                        score +=1000
-                    # （11）含有4个白子和1个空点，得-100000分
-                    elif white_count == 4 and empty_count == 1:
-
-                        score +=100000
-                    # （12）含有5个白子，得-10000000分
-                    if white_count==5:
-                        score+=10000000
-                if(i<=10):
-                    pattern2 = ''
+                        s +=convert(board[i][j + k])
+                    self.value += evaluate_black(s) - evaluate_white(s)
+                if i + 4 < 15:
+                    s = ''
                     for k in range(5):
-                        if self.board[i+k, j] == BLACK:
-                            pattern2+="B"
-                        elif self.board[i+k, j] == WHITE:
-                            pattern2+="W"
-                        else:
-                            pattern2+="O"
-                    black_count = pattern2.count('B')
-                    white_count = pattern2.count('W')
-                    empty_count = pattern2.count('O')
-                    # （1）同时含有黑子和白子，得0分
-                    if black_count > 0 and white_count > 0:
-                        score -= 0
-                    # （2）含有1个黑子和4个空点，得+1分
-                    elif black_count == 1 and empty_count == 4:
-
-                        score -= 1
-                    # （3）含有2个黑子和3个空点，得+10分
-                    elif black_count == 2 and empty_count == 3:
-                        score -= 10
-                    # （4）含有3个黑子和2个空点，得+100分
-                    elif black_count == 3 and empty_count == 2:
-                        score -= 100
-                    # （5）含有4个黑子和1个空点，得+10000分
-                    elif black_count == 4 and empty_count == 1:
-                        score -= 10000
-                    # （6）含有5个黑子，得+1000000分
-                    if black_count == 5:
-                        score -= 1000000
-                    # （7）含有1个白子和4个空点，得-1分
-                    elif white_count == 1 and empty_count == 4:
-                        score += 1
-                    # （8）含有2个白子和3个空点，得-10分
-                    elif white_count == 2 and empty_count == 3:
-                        score += 10
-                    # （9）形如“0WWW0”，得-2000分
-                    elif white_count == 3 and empty_count == 2 and pattern1[0] == 'O' and pattern1[-1] == 'O':
-                        score += 2000
-                    # （10）含有3个白子和2个空点，得-1000分
-                    elif white_count == 3 and empty_count == 2:
-                        score += 1000
-                    # （11）含有4个白子和1个空点，得-100000分
-                    elif white_count == 4 and empty_count == 1:
-
-                        score += 100000
-                    # （12）含有5个白子，得-10000000分
-                    if white_count == 5:
-                        score += 10000000
-
-                if  j<=10 and i <= 10:
-                    pattern3 = ''
+                        s += convert(board[i+k][j])
+                self.value += evaluate_black(s) - evaluate_white(s)
+                if i + 4 < 15 and j + 4 < 15:
+                    s = ''
                     for k in range(5):
-                        if self.board[i+k, j + k] == BLACK:
-                            pattern3+="B"
-                        elif self.board[i+k, j + k] == WHITE:
-                            pattern3+="B"
-                        else:
-                            pattern3+="O"
-                    black_count = pattern3.count('B')
-                    white_count = pattern3.count('W')
-                    empty_count = pattern3.count('O')
-                    # （1）同时含有黑子和白子，得0分
-                    if black_count > 0 and white_count > 0:
-                        score -= 0
-                    # （2）含有1个黑子和4个空点，得+1分
-                    elif black_count == 1 and empty_count == 4:
-
-                        score -= 1
-                    # （3）含有2个黑子和3个空点，得+10分
-                    elif black_count == 2 and empty_count == 3:
-                        score -= 10
-                    # （4）含有3个黑子和2个空点，得+100分
-                    elif black_count == 3 and empty_count == 2:
-                        score -= 100
-                    # （5）含有4个黑子和1个空点，得+10000分
-                    elif black_count == 4 and empty_count == 1:
-                        score -= 10000
-                    # （6）含有5个黑子，得+1000000分
-                    if black_count == 5:
-                        score -= 1000000
-                    # （7）含有1个白子和4个空点，得-1分
-                    elif white_count == 1 and empty_count == 4:
-                        score += 1
-                    # （8）含有2个白子和3个空点，得-10分
-                    elif white_count == 2 and empty_count == 3:
-                        score += 10
-                    # （9）形如“0WWW0”，得-2000分
-                    elif white_count == 3 and empty_count == 2 and pattern1[0] == 'O' and pattern1[-1] == 'O':
-                        score += 2000
-                    # （10）含有3个白子和2个空点，得-1000分
-                    elif white_count == 3 and empty_count == 2:
-                        score += 1000
-                    # （11）含有4个白子和1个空点，得-100000分
-                    elif white_count == 4 and empty_count == 1:
-
-                        score += 100000
-                    # （12）含有5个白子，得-10000000分
-                    if white_count == 5:
-                        score += 10000000
-
-
-                if i>=5 and j<=10:
-                    pattern4 = ''
+                        s += convert(board[i+k][j + k])
+                self.value += evaluate_black(s) - evaluate_white(s)
+                if i + 4 < 15 and j - 4 >= 0:
+                    s = ''
                     for k in range(5):
-                        if self.board[i - k, j + k] == BLACK:
-                            pattern4+="B"
-                        elif self.board[i - k, j + k] == WHITE:
-                            pattern4+="W"
-                        else:
-                            pattern4+="O"
-                    black_count = pattern4.count('B')
-                    white_count = pattern4.count('W')
-                    empty_count = pattern4.count('O')
-                    # （1）同时含有黑子和白子，得0分
-                    if black_count > 0 and white_count > 0:
-                        score -= 0
-                    # （2）含有1个黑子和4个空点，得+1分
-                    elif black_count == 1 and empty_count == 4:
-
-                        score -= 1
-                    # （3）含有2个黑子和3个空点，得+10分
-                    elif black_count == 2 and empty_count == 3:
-                        score -= 10
-                    # （4）含有3个黑子和2个空点，得+100分
-                    elif black_count == 3 and empty_count == 2:
-                        score -= 100
-                    # （5）含有4个黑子和1个空点，得+10000分
-                    elif black_count == 4 and empty_count == 1:
-                        score -= 10000
-                    # （6）含有5个黑子，得+1000000分
-                    if black_count == 5:
-                        score -= 1000000
-                    # （7）含有1个白子和4个空点，得-1分
-                    elif white_count == 1 and empty_count == 4:
-                        score += 1
-                    # （8）含有2个白子和3个空点，得-10分
-                    elif white_count == 2 and empty_count == 3:
-                        score += 10
-                    # （9）形如“0WWW0”，得-2000分
-                    elif white_count == 3 and empty_count == 2 and pattern1[0] == 'O' and pattern1[-1] == 'O':
-                        score += 2000
-                    # （10）含有3个白子和2个空点，得-1000分
-                    elif white_count == 3 and empty_count == 2:
-                        score += 1000
-                    # （11）含有4个白子和1个空点，得-100000分
-                    elif white_count == 4 and empty_count == 1:
-
-                        score += 100000
-                    # （12）含有5个白子，得-10000000分
-                    if white_count == 5:
-                        score += 10000000
-        return score
-
-
+                        s += convert(board[i+k][j-k])
+                self.value += evaluate_black(s) - evaluate_white(s)
+        print("the whole value",self.value)
 
 class GameTree:
     def __init__(self, maxDepth, next_size,
@@ -328,13 +186,11 @@ class GameTree:
         self.nodeNext = None
         self.openTable=[]
         self.closedTable=[]
-
-        if board is not None:
-            self.nodeRoot.board = board
+        self.nodeRoot.board = board
 
     def get_search_nodes(self, node):
-        enpty=True
-        newBoard =np.zeros((BOARD_SIZE,BOARD_SIZE))
+        empty=True
+        newBoard =np.zeros((BOARD_SIZE,BOARD_SIZE),dtype=int)
         for i in range(15):
             for j in range(15):
                 if node.board[i,j] == 0:
@@ -371,9 +227,9 @@ class GameTree:
     def is_alpha_beta_cut(self, node):
         if node is None or node.father is None:
             return False
-        if node.is_max and node.value > node.father.value:
+        if node.is_max and node.value >= node.father.value:
             return True
-        if not node.is_max and node.value < node.father.value:
+        if not node.is_max and node.value <= node.father.value:
             return True
         return self.is_alpha_beta_cut(node.father)
 
@@ -418,7 +274,7 @@ class GameTree:
                 numExpand = self.expand_children_nodes(node)
                 if numExpand != 0:
                     continue
-            node.evaluate()
+            node.evaluate(node.board)
             self.update_value_from_node(node)
         self.set_next_pos()
         return 0
@@ -508,7 +364,7 @@ def game_loop():
         if check_win(Real_board,player_x,player_y,BLACK):
             show_message("Human Win!")
         temp_board=Real_board.copy()
-        ai=GameTree(2,2,temp_board)
+        ai=GameTree(1,4,temp_board)
         ai.minmax()
         print(ai.get_next_pos()[0],ai.get_next_pos()[1])
         ai_x,ai_y=ai_move(Real_board,ai.get_next_pos())
@@ -517,5 +373,4 @@ def game_loop():
         if check_win(Real_board, ai_x,ai_y,WHITE):
             show_message("AI Win！")
         step+=1
-
 game_loop()
